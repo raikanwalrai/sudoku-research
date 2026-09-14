@@ -37,7 +37,7 @@ independent non-neural function or solver.
 \hline
 Sprint 00 & Development environment and repository bootstrap -- COMPLETE \\
 Sprint 01 & Mathematical representation, board, constraints, validator -- COMPLETE \\
-Sprint 02 & Exact Sudoku solver / ground-truth oracle -- pending \\
+Sprint 02 & Exact Sudoku solver / ground-truth oracle -- COMPLETE \\
 Sprint 03 & Synthetic puzzle generator and uniqueness verification -- pending \\
 Sprint 04 & Dataset engineering and leakage prevention -- pending \\
 Sprint 05 & MLP baseline -- pending \\
@@ -155,5 +155,101 @@ The resulting verification was:
 
 Sprint 01 therefore establishes the verified representation and validation
 foundation required by the exact solver/oracle work in Sprint 02.
+
+\section{Sprint 02}
+
+Sprint 02 established the deterministic exact Sudoku solver and
+ground-truth oracle required for all subsequent learning experiments.
+
+\subsection{Solver Design}
+
+The exact solver operates directly on the immutable \texttt{Board}
+representation established in Sprint 01. Sudoku constraint semantics are
+delegated to the existing validator rather than duplicated inside the
+solver.
+
+The search procedure uses deterministic depth-first backtracking with
+Minimum Remaining Values (MRV) cell selection. Candidate values are
+obtained from the Sprint 01 candidate computation. Candidate traversal is
+sorted so that identical input boards produce identical search decisions
+and solutions.
+
+\subsection{Oracle Semantics}
+
+The solver provides three principal operations:
+
+\begin{itemize}
+    \item \texttt{solve(board)} returns a solution only when exactly one
+    solution exists;
+    \item \texttt{count\_solutions(board, limit)} counts solutions up to
+    the supplied stopping limit;
+    \item \texttt{has\_unique\_solution(board)} tests whether exactly one
+    solution exists.
+\end{itemize}
+
+With the standard stopping threshold of two, the oracle distinguishes:
+
+\[
+\operatorname{count}(X)=0
+\]
+
+for an unsatisfiable puzzle,
+
+\[
+\operatorname{count}(X)=1
+\]
+
+for a uniquely solvable puzzle, and
+
+\[
+\operatorname{count}(X)\geq2
+\]
+
+for a puzzle with multiple solutions.
+
+This distinction is important because later synthetic datasets must be
+able to guarantee unique solutions without relying on a neural model.
+
+\subsection{Solution Verification}
+
+The implementation also provides \texttt{verify\_solution(board, solution)}.
+A verified solution must be complete, satisfy all Sudoku constraints, and
+preserve every non-zero clue present in the original puzzle.
+
+\subsection{Research Independence}
+
+The exact solver contains no neural-network component and does not depend
+on learned parameters, learned representations, or training data. It is
+therefore maintained as an independent computational oracle against which
+later neural models can be evaluated.
+
+The intended later comparison is:
+
+\[
+N_{\theta}(X) \stackrel{?}{=} G(X),
+\]
+
+where $N_{\theta}$ denotes a neural model and $G$ denotes the exact
+ground-truth solver.
+
+\subsection{Verification}
+
+Sprint 02 verification included:
+
+\begin{itemize}
+    \item Python compilation checks passed;
+    \item the complete regression suite passed with 36 tests;
+    \item unique-solution solving was tested;
+    \item deterministic repeated solving was tested;
+    \item complete-board handling was tested;
+    \item multiple-solution detection was tested;
+    \item invalid partial-board rejection was tested;
+    \item solution-count limit validation was tested;
+    \item solution verification was tested.
+\end{itemize}
+
+Sprint 02 therefore establishes the deterministic exact solver/oracle
+required for synthetic puzzle generation and ground-truth dataset
+construction in Sprint 03.
 
 \end{document}

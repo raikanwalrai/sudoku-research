@@ -65,6 +65,34 @@ Board/Validator import and foundational invariant checks passed.
 The implementation is generated reproducibly by
 `scripts/sprint_01_implementation.sh`.
 
+
+### Sprint 02 — Exact solver / ground-truth oracle
+
+COMPLETE.
+
+The deterministic exact Sudoku solver is implemented under
+`src/sudoku_research/solver.py`, with regression tests under `tests/`.
+
+The implementation provides:
+
+- deterministic depth-first backtracking;
+- Minimum Remaining Values (MRV) cell selection;
+- deterministic candidate ordering;
+- exact solution counting with a configurable stopping limit;
+- unique-solution detection;
+- unique-solution solving;
+- independent solution verification;
+- rejection of invalid partial Sudoku boards.
+
+Sprint 02 verification: the complete regression suite passes with 36 tests.
+The exact solver is independent of neural models and is designated as the
+ground-truth oracle for subsequent dataset generation and neural-model
+experiments.
+
+The implementation is generated reproducibly by
+`scripts/sprint_02_implementation.sh`.
+
+
 ## Development discipline
 
 The canonical implementation belongs under `src/`.
