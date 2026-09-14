@@ -93,6 +93,74 @@ local commit, remote configuration, and GitHub commit state were independently
 checked before proceeding to the next sprint.
 
 
+\section{Security and Reproducibility Infrastructure}
+
+Security and repository hygiene were established as mandatory controls
+before continuing the experimental implementation.
+
+The repository now contains three security-infrastructure components:
+
+\begin{itemize}
+    \item \texttt{scripts/security\_scan.sh}: repository security and secret scanner;
+    \item \texttt{.githooks/pre-push}: automatic Git pre-push security gate; and
+    \item \texttt{scripts/install\_git\_hooks.sh}: installer for configuring the
+    repository Git hooks path.
+\end{itemize}
+
+The repository is configured to use:
+
+\begin{verbatim}
+core.hooksPath=.githooks
+\end{verbatim}
+
+The pre-push gate executes five checks:
+
+\begin{enumerate}
+    \item security-scanner self-test;
+    \item working-tree security scan;
+    \item staged-content security scan;
+    \item current \texttt{HEAD} security scan; and
+    \item repository-history security scan.
+\end{enumerate}
+
+The scanner checks configured credential-bearing filenames and secret
+patterns covering AWS credentials, GitHub tokens, OpenAI-style API keys,
+Google API keys, private keys, bearer tokens, JWTs, generic credential
+assignments, password assignments, and database URLs containing embedded
+credentials. Detected values are redacted in scanner output.
+
+The scanner includes synthetic self-tests for the detection rules and
+placeholder exclusion. An empirical synthetic-secret test was also
+performed against the pre-push hook using representative AWS,
+OpenAI-style, and password credentials. The hook blocked the synthetic
+push attempt with a non-zero exit status. The synthetic artifact was then
+removed and the repository was rescanned.
+
+The security gate is therefore treated as a mandatory repository
+workflow rather than an optional manual inspection. The infrastructure
+was additionally validated outside the Python virtual environment to
+ensure that the Git hook does not depend on an activated virtual
+environment. The scanner uses an available Python interpreter, defaulting
+to \texttt{python3} when no explicit \texttt{PYTHON\_BIN} is supplied.
+
+The security scanner is pattern-based and is not a mathematical or
+cryptographic guarantee that every possible secret will be detected.
+Its purpose is to provide a reproducible repository-hygiene control and
+a preventive barrier against common credential leakage.
+
+The final validation performed before documenting this infrastructure
+reported:
+
+\begin{itemize}
+    \item security-scanner self-test: PASS;
+    \item staged security scan: PASS;
+    \item working-tree security scan: PASS;
+    \item current \texttt{HEAD} security scan: PASS;
+    \item repository-history security scan: PASS;
+    \item full test suite: 36 tests passed; and
+    \item Git staged-diff and working-tree diff checks: PASS.
+\end{itemize}
+
 \section{Sprint 01}
 
 Sprint 01 established the mathematical representation and foundational

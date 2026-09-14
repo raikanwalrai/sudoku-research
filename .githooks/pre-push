@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+SCANNER="$REPO_ROOT/scripts/security_scan.sh"
+
+echo "============================================================"
+echo " Sudoku Research — Pre-push Security Gate"
+echo "============================================================"
+echo
+
+if [ ! -x "$SCANNER" ]; then
+    echo "[FAIL] Security scanner is missing or not executable:"
+    echo "       $SCANNER"
+    exit 1
+fi
+
+echo "===== SECURITY SCANNER SELF-TEST ====="
+"$SCANNER" --self-test
+
+echo
+echo "===== WORKING-TREE SECURITY SCAN ====="
+"$SCANNER" --working-tree
+
+echo
+echo "===== STAGED-CONTENT SECURITY SCAN ====="
+"$SCANNER" --staged
+
+echo
+echo "===== CURRENT HEAD SECURITY SCAN ====="
+"$SCANNER" --head
+
+echo
+echo "===== REPOSITORY HISTORY SECURITY SCAN ====="
+"$SCANNER" --history
+
+echo
+echo "============================================================"
+echo " PRE-PUSH SECURITY GATE PASSED"
+echo " Push may proceed."
+echo "============================================================"

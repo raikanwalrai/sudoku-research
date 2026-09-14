@@ -15,7 +15,14 @@ echo
 # status.
 # ------------------------------------------------------------
 
-python - "$MODE" <<'PY'
+PYTHON_BIN="${PYTHON_BIN:-python3}"
+
+if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+    echo "[FAIL] Required Python interpreter not found: $PYTHON_BIN"
+    exit 1
+fi
+
+"$PYTHON_BIN" - "$MODE" <<'PY'
 import re
 import subprocess
 import sys
