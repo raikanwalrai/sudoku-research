@@ -51,6 +51,17 @@ data/test/*
 .env
 .env.*
 !.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+credentials.json
+credential.json
+service-account.json
+secrets.json
+secret.json
 
 # OS / editor
 .DS_Store
