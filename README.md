@@ -155,3 +155,48 @@ does not constitute a mathematical or cryptographic guarantee that no
 secret exists. It is a reproducibility and repository-hygiene control that
 must be combined with appropriate handling of credentials and other
 sensitive material.
+
+### Sprint 03 — Synthetic Sudoku Generator
+
+**Objective:** Build a reproducible synthetic Sudoku generator that produces
+complete valid solutions and partially revealed puzzles with exactly one
+solution.
+
+The generator must produce a pair
+
+    (X, S)
+
+where `S` is a complete valid 9x9 Sudoku solution and `X` is obtained by
+controlled clue removal from `S`.
+
+The following invariants are mandatory:
+
+1. `S` is a valid complete Sudoku solution.
+2. `X` is a valid partial Sudoku.
+3. Every non-zero clue in `X` agrees with `S`.
+4. `count_solutions(X, 2) == 1`.
+5. `solve(X) == S`.
+6. Generation is reproducible from an explicit seed and generation
+   parameters.
+7. Sprint 03 uses only synthetically generated Sudoku instances and does
+   not depend on external Sudoku datasets.
+
+The initial generation strategy is randomized deterministic backtracking
+for complete solutions followed by controlled clue removal. Python's
+standard-library `random.Random(seed)` is used so that the random state is
+explicit and reproducible.
+
+Difficulty optimization is intentionally deferred. Sprint 03 prioritizes
+validity, uniqueness, reproducibility, and traceability. Dataset splitting
+and formal leakage-prevention procedures are deferred to Sprint 04.
+
+Generated datasets are not committed to Git by default. The repository
+stores generator code, tests, metadata specifications, and reproducibility
+information rather than large generated artifacts.
+
+Planned implementation files:
+
+    src/sudoku_research/generator.py
+    tests/test_generator.py
+    scripts/sprint_03_implementation.sh
+    scripts/sprint_03_close.sh

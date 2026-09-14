@@ -320,4 +320,94 @@ Sprint 02 therefore establishes the deterministic exact solver/oracle
 required for synthetic puzzle generation and ground-truth dataset
 construction in Sprint 03.
 
+
+\section{Sprint 03 --- Synthetic Sudoku Generator}
+
+\subsection{Research Objective}
+
+Sprint 03 establishes the synthetic data-generation layer for the Sudoku
+reasoning laboratory. The purpose is to generate reproducible puzzle and
+solution pairs without relying on external Sudoku datasets.
+
+A generated instance is represented as
+\[
+(X,S),
+\]
+where \(S\) is a complete valid \(9\times9\) Sudoku solution and \(X\) is a
+partial board obtained from \(S\) by controlled clue removal.
+
+\subsection{Generation Contract}
+
+For every generated pair \((X,S)\), the following invariants are required:
+
+\begin{enumerate}
+    \item \(S\) is a valid complete Sudoku solution;
+    \item \(X\) is a valid partial Sudoku;
+    \item every non-zero value in \(X\) is identical to the corresponding
+    value in \(S\);
+    \item
+    \[
+    \operatorname{count\_solutions}(X,2)=1;
+    \]
+    \item
+    \[
+    \operatorname{solve}(X)=S;
+    \]
+    \item generation is reproducible from an explicit random seed and
+    generation parameters; and
+    \item the generated instances originate entirely from the synthetic
+    generator rather than an external Sudoku corpus.
+\end{enumerate}
+
+The solution generator uses randomized deterministic backtracking driven by
+Python's standard-library \texttt{random.Random(seed)}. This separates
+controlled stochastic variation in data generation from the deterministic
+Sprint-02 exact solver used as the ground-truth oracle.
+
+\subsection{Controlled Clue Removal}
+
+Given a complete solution \(S\), cells are considered for removal in a
+seed-controlled order. A candidate removal is retained only when the
+resulting puzzle remains uniquely solvable. The uniqueness criterion is
+evaluated using the Sprint-02 solution-counting oracle with a cap of two
+solutions.
+
+Thus, a generated puzzle is accepted only when
+\[
+\operatorname{count\_solutions}(X,2)=1.
+\]
+
+The resulting solution must additionally satisfy
+\[
+\operatorname{solve}(X)=S,
+\]
+providing an explicit consistency check between the generated target and
+the independent oracle.
+
+\subsection{Experimental Scope}
+
+Sprint 03 deliberately prioritizes reproducibility, validity, uniqueness,
+and traceability over puzzle-difficulty optimization. Difficulty
+stratification will be considered after the basic generator is validated.
+
+Formal train/validation/test partitioning and leakage-prevention procedures
+are deferred to Sprint 04 so that generation and dataset partitioning remain
+separate experimental concerns.
+
+Large generated datasets are excluded from version control by the
+repository's existing data-directory policy. The research repository
+therefore retains the generator implementation, tests, specifications, and
+reproducibility information rather than large generated artifacts.
+
+\subsection{Planned Implementation}
+
+The initial Sprint-03 implementation consists of:
+
+\begin{itemize}
+    \item \texttt{src/sudoku\_research/generator.py};
+    \item \texttt{tests/test\_generator.py};
+    \item \texttt{scripts/sprint\_03\_implementation.sh}; and
+    \item \texttt{scripts/sprint\_03\_close.sh}.
+\end{itemize}
+
 \end{document}
