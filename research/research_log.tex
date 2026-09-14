@@ -384,6 +384,41 @@ The resulting solution must additionally satisfy
 providing an explicit consistency check between the generated target and
 the independent oracle.
 
+
+\subsection{Empirical Boundary Validation}
+
+The initial greedy clue-removal implementation was empirically evaluated
+before being accepted as the Sprint-03 generator. Five seeds were tested at
+each of 60, 40, 30, 25, 20, and 17 retained clues. All five trials succeeded
+at 60, 40, 30, and 25 clues. No trial succeeded at 20 or 17 clues.
+
+A second diagnostic tested ten independent clue-removal orders for each of
+five independently generated complete solutions at a target of 20 clues.
+All 50 removal attempts failed to reach the target. The stopping points were
+generally between 23 and 27 clues.
+
+These observations indicate that simply increasing randomized restarts does
+not provide a reliable solution to the sparse-puzzle generation problem.
+The limitation is therefore treated as a property of the current greedy
+removal strategy rather than as a seed-selection problem.
+
+Accordingly, the validated operating range of the current Sprint-03
+generator is restricted to
+\[
+25\leq k\leq81,
+\]
+where \(k\) is the requested retained clue count. Requests below 25 clues
+are outside the supported operating range.
+
+This restriction is an implementation boundary and not a mathematical claim
+that uniquely solvable Sudoku puzzles with fewer than 25 clues do not exist.
+A future sparse-puzzle generation methodology may use a fundamentally
+different construction or search strategy. Such a methodology is outside
+the current Sprint-03 implementation scope.
+
+The negative boundary experiments are retained as research evidence because
+they prevent an unsupported claim of sparse-puzzle generation capability.
+
 \subsection{Experimental Scope}
 
 Sprint 03 deliberately prioritizes reproducibility, validity, uniqueness,

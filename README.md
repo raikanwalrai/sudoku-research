@@ -186,6 +186,12 @@ for complete solutions followed by controlled clue removal. Python's
 standard-library `random.Random(seed)` is used so that the random state is
 explicit and reproducible.
 
+The validated operating range of the current greedy clue-removal
+generator is 25--81 retained clues. Requests below 25 clues are rejected
+because the current algorithm does not provide a reliable sparse-puzzle
+generation method. This is an implementation scope boundary, not a claim
+that uniquely solvable Sudoku puzzles below 25 clues cannot exist.
+
 Difficulty optimization is intentionally deferred. Sprint 03 prioritizes
 validity, uniqueness, reproducibility, and traceability. Dataset splitting
 and formal leakage-prevention procedures are deferred to Sprint 04.
