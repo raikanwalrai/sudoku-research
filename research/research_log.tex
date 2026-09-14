@@ -36,7 +36,7 @@ independent non-neural function or solver.
 \textbf{Sprint} & \textbf{Status} \\
 \hline
 Sprint 00 & Development environment and repository bootstrap -- COMPLETE \\
-Sprint 01 & Mathematical representation, board, constraints, validator -- pending \\
+Sprint 01 & Mathematical representation, board, constraints, validator -- COMPLETE \\
 Sprint 02 & Exact Sudoku solver / ground-truth oracle -- pending \\
 Sprint 03 & Synthetic puzzle generator and uniqueness verification -- pending \\
 Sprint 04 & Dataset engineering and leakage prevention -- pending \\
@@ -91,5 +91,69 @@ for the project.
 The repository structure, research-control documents, Git ignore boundary,
 local commit, remote configuration, and GitHub commit state were independently
 checked before proceeding to the next sprint.
+
+
+\section{Sprint 01}
+
+Sprint 01 established the mathematical representation and foundational
+constraint-validation layer for Sudoku.
+
+\subsection{Implementation}
+
+The board is represented as a $9\times9$ structure with integer cell values in
+the domain $\{0,\ldots,9\}$. The value $0$ represents an empty cell. A
+row-major flattened representation contains exactly 81 cells.
+
+The implementation provides an immutable \texttt{Board} abstraction with:
+
+\begin{itemize}
+    \item construction from rows;
+    \item construction from exactly 81 row-major values;
+    \item conversion back to row and flattened representations;
+    \item coordinate-based cell access;
+    \item functional cell replacement returning a new board;
+    \item completeness checking;
+    \item validation of board shape and cell-value domain.
+\end{itemize}
+
+Boolean values are explicitly rejected even though Python treats
+\texttt{bool} as a subclass of \texttt{int}. This preserves the intended
+mathematical cell domain.
+
+\subsection{Constraint Validation}
+
+The validator is separated from the board representation. It provides:
+
+\begin{itemize}
+    \item partial-board validation;
+    \item row constraint validation;
+    \item column constraint validation;
+    \item $3\times3$ box constraint validation;
+    \item complete-solution validation;
+    \item legal candidate-value computation for empty cells.
+\end{itemize}
+
+A valid partial board contains no duplicate non-zero values in any row,
+column, or $3\times3$ box. A valid solution additionally requires every cell
+to be populated.
+
+\subsection{Verification}
+
+The Sprint 01 developer implementation script was executed after the final
+domain-validation correction.
+
+The resulting verification was:
+
+\begin{itemize}
+    \item 20 tests passed;
+    \item Python syntax/compile checks passed;
+    \item \texttt{Board} import passed;
+    \item validator imports passed;
+    \item foundational board invariants passed;
+    \item \texttt{git diff --check} passed.
+\end{itemize}
+
+Sprint 01 therefore establishes the verified representation and validation
+foundation required by the exact solver/oracle work in Sprint 02.
 
 \end{document}

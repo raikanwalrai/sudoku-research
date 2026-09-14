@@ -39,6 +39,32 @@ Dataset construction must prevent leakage between train, validation, and test
 sets, including leakage caused by multiple puzzle variants derived from the
 same completed Sudoku board.
 
+## Current implementation status
+
+### Sprint 01 — Mathematical representation and validator
+
+COMPLETE.
+
+The foundational Sudoku representation and constraint validator are implemented
+under `src/sudoku_research/`, with regression tests under `tests/`.
+
+The implementation provides:
+
+- immutable 9×9 board representation
+- row-major 81-cell flattening
+- cell domain validation for integers 0–9
+- explicit rejection of Boolean cell values
+- row, column, and 3×3 box constraint validation
+- partial-board validation
+- complete-solution validation
+- legal candidate-value computation
+
+Sprint 01 verification: 20 tests passed, Python compilation passed, and
+Board/Validator import and foundational invariant checks passed.
+
+The implementation is generated reproducibly by
+`scripts/sprint_01_implementation.sh`.
+
 ## Development discipline
 
 The canonical implementation belongs under `src/`.
