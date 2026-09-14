@@ -1,0 +1,69 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{hyperref}
+\usepackage{longtable}
+
+\title{Sudoku Neural-to-Fundamental-Function Research\\
+Research Development Log}
+\author{Kanwal Rai}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Purpose}
+
+This document records the implementation history, methodological decisions,
+experimental results, reproducibility information, and research conclusions
+for the Sudoku neural-to-fundamental-function research project.
+
+\section{Research Principle}
+
+Sudoku is used as a controlled combinatorial reasoning laboratory. The
+research does not claim to resolve the P versus NP problem. Instead, it
+investigates whether progressively sophisticated neural architectures can
+learn and expose compact structural representations of Sudoku constraints
+and whether such learned structure can ultimately be converted into an
+independent non-neural function or solver.
+
+\section{Development Status}
+
+\begin{longtable}{p{0.18\textwidth}p{0.72\textwidth}}
+\textbf{Sprint} & \textbf{Status} \\
+\hline
+Sprint 00 & Development environment and repository bootstrap -- in progress \\
+Sprint 01 & Mathematical representation, board, constraints, validator -- pending \\
+Sprint 02 & Exact Sudoku solver / ground-truth oracle -- pending \\
+Sprint 03 & Synthetic puzzle generator and uniqueness verification -- pending \\
+Sprint 04 & Dataset engineering and leakage prevention -- pending \\
+Sprint 05 & MLP baseline -- pending \\
+Sprint 06 & MLP generalization -- pending \\
+Sprint 07 & MLP reverse engineering -- pending \\
+Sprint 08 & CNN -- pending \\
+Sprint 09 & RNN/LSTM/GRU -- pending \\
+Sprint 10 & GNN constraint graph -- pending \\
+Sprint 11 & Transformer -- pending \\
+Sprint 12 & GPT-style sequence model -- pending \\
+Sprint 13 & Cross-architecture representation analysis -- pending \\
+Sprint 14 & Symbolic regression / equation and rule discovery -- pending \\
+Sprint 15 & Independent extracted function / solver -- pending \\
+Sprint 16 & Independent validation on fresh unseen distributions -- pending \\
+\end{longtable}
+
+\section{Sprint 00}
+
+The development environment was verified under WSL Ubuntu on the Windows
+D: drive. The intended repository root is:
+
+\begin{verbatim}
+/mnt/d/0001_0001/sudoku-research
+\end{verbatim}
+
+The canonical Git branch is \texttt{main}. GitHub authentication is configured
+for the \texttt{raikanwalrai} account.
+
+\end{document}
