@@ -16,8 +16,10 @@ Identity:
 from __future__ import annotations
 
 import hashlib
+from dataclasses import dataclass
 
 from .board import Board
+from .generator import PuzzleRecord
 
 
 BOARD_SIZE = 9
@@ -83,3 +85,89 @@ def puzzle_hash(board: Board) -> str:
 def solution_hash(board: Board) -> str:
     """Return the exact identity hash for a complete solution board."""
     return board_hash(board)
+
+
+@dataclass(frozen=True)
+class DatasetRecord:
+    """Auditable dataset representation of a generated Sudoku record.
+
+    The record preserves the generator provenance while adding exact
+    puzzle and solution identities.
+    """
+
+    puzzle_id: int
+    generator_seed: int
+    puzzle: Board
+    solution: Board
+    clue_count: int
+    removed_count: int
+    target_clues: int
+    puzzle_hash: str
+    solution_hash: str
+
+    @classmethod
+    def from_puzzle_record(cls, record: PuzzleRecord) -> "DatasetRecord":
+        """Create an auditable dataset record from a generated puzzle."""
+        if not isinstance(record, PuzzleRecord):
+            raise TypeError("record must be a PuzzleRecord instance")
+
+        return cls(
+            puzzle_id=record.puzzle_id,
+            generator_seed=record.seed,
+            puzzle=record.puzzle,
+            solution=record.solution,
+            clue_count=record.clue_count,
+            removed_count=record.removed_count,
+            target_clues=record.target_clues,
+            puzzle_hash=puzzle_hash(record.puzzle),
+            solution_hash=solution_hash(record.solution),
+        )
+
+    def validate_identity(self) -> None:
+        """Verify that recorded identities match the stored boards."""
+        if self.puzzle_hash != puzzle_hash(self.puzzle):
+            raise ValueError("puzzle_hash does not match puzzle contents")
+
+        if self.solution_hash != solution_hash(self.solution):
+            raise ValueError("solution_hash does not match solution contents")
+
+    def to_puzzle_record(self) -> PuzzleRecord:
+        """Return the underlying Sprint-03 puzzle record."""
+        return PuzzleRecord(
+            puzzle_id=self.puzzle_id,
+            seed=self.generator_seed,
+            puzzle=self.puzzle,
+            solution=self.solution,
+            clue_count=self.clue_count,
+            removed_count=self.removed_count,
+            target_clues=self.target_clues,
+        )
+
+
+def build_dataset_records(
+    records: tuple[PuzzleRecord, ...],
+) -> tuple[DatasetRecord, ...]:
+    """Convert generated PuzzleRecords into auditable dataset records."""
+    if not isinstance(records, tuple):
+        raise TypeError("records must be a tuple of PuzzleRecord instances")
+
+    dataset_records = tuple(
+        DatasetRecord.from_puzzle_record(record)
+        for record in records
+    )
+
+    for record in dataset_records:
+        record.validate_identity()
+
+    return dataset_records
+
+
+__all__ = [
+    "DatasetRecord",
+    "SERIALIZED_LENGTH",
+    "board_hash",
+    "build_dataset_records",
+    "puzzle_hash",
+    "serialize_board",
+    "solution_hash",
+]

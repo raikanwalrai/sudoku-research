@@ -109,3 +109,130 @@ def test_non_board_is_rejected():
 def test_hash_rejects_non_board():
     with pytest.raises(TypeError):
         board_hash(tuple(KNOWN_BOARD.to_rows()))  # type: ignore[arg-type]
+
+
+from dataclasses import replace
+
+import pytest
+
+from sudoku_research.dataset import (
+    DatasetRecord,
+    build_dataset_records,
+    puzzle_hash,
+    solution_hash,
+)
+from sudoku_research.generator import PuzzleRecord, generate_dataset, generate_puzzle
+
+
+def test_dataset_record_preserves_generator_provenance():
+    source = generate_puzzle(seed=12345, target_clues=30)
+
+    record = DatasetRecord.from_puzzle_record(source)
+
+    assert record.puzzle_id == source.puzzle_id
+    assert record.generator_seed == source.seed
+    assert record.puzzle == source.puzzle
+    assert record.solution == source.solution
+    assert record.clue_count == source.clue_count
+    assert record.removed_count == source.removed_count
+    assert record.target_clues == source.target_clues
+
+
+def test_dataset_record_computes_exact_identity_hashes():
+    source = generate_puzzle(seed=12345, target_clues=30)
+
+    record = DatasetRecord.from_puzzle_record(source)
+
+    assert record.puzzle_hash == puzzle_hash(source.puzzle)
+    assert record.solution_hash == solution_hash(source.solution)
+
+
+def test_dataset_record_identity_validation_succeeds_for_untampered_record():
+    source = generate_puzzle(seed=12345, target_clues=30)
+
+    record = DatasetRecord.from_puzzle_record(source)
+
+    record.validate_identity()
+
+
+def test_dataset_record_detects_tampered_puzzle_hash():
+    source = generate_puzzle(seed=12345, target_clues=30)
+
+    record = DatasetRecord.from_puzzle_record(source)
+    tampered = replace(record, puzzle_hash="0" * 64)
+
+    with pytest.raises(ValueError, match="puzzle_hash"):
+        tampered.validate_identity()
+
+
+def test_dataset_record_detects_tampered_solution_hash():
+    source = generate_puzzle(seed=12345, target_clues=30)
+
+    record = DatasetRecord.from_puzzle_record(source)
+    tampered = replace(record, solution_hash="0" * 64)
+
+    with pytest.raises(ValueError, match="solution_hash"):
+        tampered.validate_identity()
+
+
+def test_dataset_record_round_trip_preserves_original_record():
+    source = generate_puzzle(seed=12345, target_clues=30)
+
+    dataset_record = DatasetRecord.from_puzzle_record(source)
+    restored = dataset_record.to_puzzle_record()
+
+    assert restored == source
+
+
+def test_build_dataset_records_preserves_order():
+    source = generate_dataset(size=5, seed=20260915, target_clues=30)
+
+    dataset_records = build_dataset_records(source)
+
+    assert len(dataset_records) == len(source)
+
+    for dataset_record, original in zip(dataset_records, source):
+        assert dataset_record.to_puzzle_record() == original
+
+
+def test_build_dataset_records_is_deterministic():
+    source_a = generate_dataset(size=5, seed=20260915, target_clues=30)
+    source_b = generate_dataset(size=5, seed=20260915, target_clues=30)
+
+    records_a = build_dataset_records(source_a)
+    records_b = build_dataset_records(source_b)
+
+    assert records_a == records_b
+
+
+def test_build_dataset_records_rejects_non_tuple():
+    source = generate_dataset(size=2, seed=20260915, target_clues=30)
+
+    with pytest.raises(
+        TypeError,
+        match="tuple of PuzzleRecord instances",
+    ):
+        build_dataset_records(list(source))
+
+
+def test_build_dataset_records_rejects_invalid_record_type():
+    with pytest.raises(TypeError, match="PuzzleRecord"):
+        build_dataset_records((object(),))
+
+
+def test_dataset_records_have_distinct_identity_fields_for_distinct_generated_puzzles():
+    source = generate_dataset(size=5, seed=20260915, target_clues=30)
+
+    dataset_records = build_dataset_records(source)
+
+    assert len({record.puzzle_hash for record in dataset_records}) == 5
+    assert len({record.solution_hash for record in dataset_records}) == 5
+
+
+def test_dataset_record_is_immutable():
+    source = generate_puzzle(seed=12345, target_clues=30)
+
+    record = DatasetRecord.from_puzzle_record(source)
+
+    with pytest.raises(Exception):
+        record.puzzle_hash = "0" * 64
