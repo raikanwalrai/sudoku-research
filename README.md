@@ -206,3 +206,68 @@ Planned implementation files:
     tests/test_generator.py
     scripts/sprint_03_implementation.sh
     scripts/sprint_03_close.sh
+
+### Sprint 04 — Dataset Engineering and Leakage Prevention
+
+**Objective:** Build a reproducible dataset engineering pipeline that converts
+synthetically generated Sudoku records into deterministic, auditable
+train/validation/test datasets while explicitly detecting information leakage.
+
+The dataset unit is a generated pair
+
+    (X, S)
+
+together with provenance metadata. `X` is the partially revealed Sudoku
+instance and `S` is its unique complete solution.
+
+Sprint 04 establishes three related identity concepts:
+
+1. **Puzzle identity:** exact identity of the serialized partial board `X`.
+2. **Solution identity:** exact identity of the serialized complete solution `S`.
+3. **Structural identity:** a future extension for Sudoku-preserving
+   transformations and symmetry-aware canonicalization.
+
+For exact identity, each board is deterministically serialized in row-major
+order and assigned a SHA-256 identity hash. The hashes are used for dataset
+identity, duplicate detection, provenance, and leakage auditing.
+
+The primary experimental split is performed at the complete-solution level,
+rather than independently at the puzzle-row level. Consequently, puzzles
+associated with the same exact solution must not be distributed across
+different primary splits.
+
+The primary leakage requirements are:
+
+    H(X_train) ∩ H(X_validation) = ∅
+    H(X_train) ∩ H(X_test)       = ∅
+    H(X_validation) ∩ H(X_test) = ∅
+
+and, for the primary solution-family split:
+
+    H(S_train) ∩ H(S_validation) = ∅
+    H(S_train) ∩ H(S_test)       = ∅
+    H(S_validation) ∩ H(S_test) = ∅
+
+Dataset generation and splitting must be reproducible from explicit seeds
+and generation parameters. The resulting manifest must record dataset
+version, generator provenance, dataset seed, split seed, record counts,
+clue-count distributions, identity counts, and leakage-audit results.
+
+Generated datasets remain excluded from Git by default. Sprint 04 stores
+dataset engineering code, tests, specifications, manifests or metadata
+required for reproducibility, and leakage-audit logic rather than large
+generated datasets.
+
+Structural/symmetry-aware canonicalization is treated as a distinct
+capability and must not be silently conflated with exact identity. Any
+future symmetry-aware leakage policy must be explicitly specified and
+validated.
+
+Planned implementation files:
+
+    src/sudoku_research/dataset.py
+    src/sudoku_research/leakage.py
+    tests/test_dataset.py
+    tests/test_leakage.py
+    scripts/sprint_04_implementation.sh
+    scripts/sprint_04_close.sh

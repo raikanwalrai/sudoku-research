@@ -446,3 +446,258 @@ The initial Sprint-03 implementation consists of:
 \end{itemize}
 
 \end{document}
+
+\section{Sprint 04 --- Dataset Engineering and Leakage Prevention}
+
+\subsection{Objective}
+
+Sprint 04 establishes a reproducible dataset engineering pipeline for
+synthetically generated Sudoku instances. The purpose is to convert the
+validated Sprint-03 generator output into deterministic, auditable
+training, validation, and test datasets while explicitly detecting
+information leakage.
+
+The dataset unit is a generated pair
+\[
+D_i=(X_i,S_i,M_i),
+\]
+where \(X_i\) is the partially revealed Sudoku instance, \(S_i\) is its
+unique complete solution, and \(M_i\) contains provenance and dataset
+metadata.
+
+The Sprint-04 pipeline is therefore:
+
+\[
+\text{Generator}
+\rightarrow
+\text{Raw Records}
+\rightarrow
+\text{Canonical Representation}
+\rightarrow
+\text{Identity Assignment}
+\rightarrow
+\text{Leakage Audit}
+\rightarrow
+\text{Deterministic Split}.
+\]
+
+\subsection{Identity Levels}
+
+Sprint 04 distinguishes three levels of identity.
+
+\paragraph{Puzzle identity.}
+The exact partial Sudoku board \(X\) is serialized in deterministic
+row-major order:
+\[
+\sigma(X)=x_1x_2\ldots x_{81}.
+\]
+Its exact identity is represented by
+\[
+H_X=\operatorname{SHA256}(\sigma(X)).
+\]
+
+\paragraph{Solution identity.}
+The complete solution \(S\) is serialized using the same deterministic
+row-major convention:
+\[
+\sigma(S)=s_1s_2\ldots s_{81},
+\]
+with identity
+\[
+H_S=\operatorname{SHA256}(\sigma(S)).
+\]
+
+These hashes provide deterministic identities for duplicate detection,
+provenance, reproducibility, and leakage auditing. They are not treated as
+cryptographic security mechanisms.
+
+\paragraph{Structural identity.}
+Sudoku admits structure-preserving transformations such as rotations,
+reflections, row and column permutations, band and stack permutations, and
+digit relabeling. A future structural identity may therefore be represented
+by a canonicalization function
+\[
+C(X).
+\]
+
+Structural identity is deliberately separated from exact identity in
+Sprint 04. A board that is not exactly equal to another board is not
+automatically classified as structurally equivalent. Any symmetry-aware
+canonicalization policy must be explicitly specified and independently
+validated.
+
+\subsection{Primary Split Policy}
+
+The primary experimental split is performed at the exact complete-solution
+level rather than independently at the puzzle-row level.
+
+Consequently, all generated puzzles associated with the same exact solution
+must remain within the same primary split.
+
+For the primary benchmark, the following conditions must hold:
+\[
+H(S_{\mathrm{train}})
+\cap
+H(S_{\mathrm{validation}})
+=
+\varnothing,
+\]
+\[
+H(S_{\mathrm{train}})
+\cap
+H(S_{\mathrm{test}})
+=
+\varnothing,
+\]
+and
+\[
+H(S_{\mathrm{validation}})
+\cap
+H(S_{\mathrm{test}})
+=
+\varnothing.
+\]
+
+Exact puzzle identities must also not cross split boundaries:
+\[
+H(X_{\mathrm{train}})
+\cap
+H(X_{\mathrm{validation}})
+=
+\varnothing,
+\]
+\[
+H(X_{\mathrm{train}})
+\cap
+H(X_{\mathrm{test}})
+=
+\varnothing,
+\]
+and
+\[
+H(X_{\mathrm{validation}})
+\cap
+H(X_{\mathrm{test}})
+=
+\varnothing.
+\]
+
+The primary benchmark therefore seeks to establish both:
+\[
+X_{\mathrm{test}}\notin X_{\mathrm{train}}
+\]
+and
+\[
+S_{\mathrm{test}}\notin S_{\mathrm{train}}.
+\]
+
+\subsection{Reproducibility Contract}
+
+Dataset construction and splitting must be reproducible from explicit
+parameters.
+
+At minimum, provenance must preserve:
+\begin{itemize}
+    \item dataset version;
+    \item generator provenance;
+    \item dataset seed;
+    \item split seed;
+    \item generation parameters;
+    \item target clue-count configuration;
+    \item deterministic record ordering.
+\end{itemize}
+
+Repeated execution with the same parameters and seeds must produce the same
+dataset identities and the same split assignments.
+
+\subsection{Dataset Manifest}
+
+The dataset pipeline must produce sufficient metadata to audit the generated
+dataset without requiring the generated dataset itself to be committed to
+Git.
+
+The manifest should record, at minimum:
+\begin{itemize}
+    \item dataset version;
+    \item generator version or provenance identifier;
+    \item dataset seed;
+    \item split seed;
+    \item total record count;
+    \item train, validation, and test record counts;
+    \item clue-count distributions;
+    \item exact puzzle identity count;
+    \item exact solution identity count;
+    \item duplicate counts;
+    \item cross-split leakage counts;
+    \item leakage-audit result.
+\end{itemize}
+
+\subsection{Generated-Data Policy}
+
+Generated datasets remain excluded from Git by default. The repository stores
+the dataset engineering implementation, tests, specifications, manifests or
+metadata required for reproducibility, and leakage-audit logic rather than
+large generated datasets.
+
+A generated dataset must therefore be reproducible from its recorded
+parameters and code rather than being treated as an opaque committed
+artifact.
+
+\subsection{Leakage Categories}
+
+Sprint 04 explicitly distinguishes several leakage categories.
+
+\paragraph{Exact puzzle duplication.}
+Two records have the same puzzle identity when
+\[
+H(X_i)=H(X_j).
+\]
+
+\paragraph{Exact solution duplication.}
+Two records have the same solution identity when
+\[
+H(S_i)=H(S_j).
+\]
+
+\paragraph{Cross-split solution leakage.}
+A primary split violation occurs when records having the same exact solution
+identity occur in different primary splits.
+
+\paragraph{Structural leakage.}
+Two different exact boards may nevertheless be related by a
+Sudoku-preserving transformation. Structural leakage is therefore a
+separate future audit category and must not be silently equated with exact
+duplication.
+
+\subsection{Testing Requirements}
+
+The Sprint-04 implementation must include automated tests demonstrating:
+
+\begin{itemize}
+    \item deterministic serialization of Sudoku boards;
+    \item deterministic identity hashing;
+    \item reproducibility of dataset construction;
+    \item reproducibility of split assignment;
+    \item detection of exact duplicate puzzles;
+    \item detection of duplicate solutions;
+    \item detection or rejection of cross-split solution leakage;
+    \item validation of dataset records and metadata;
+    \item consistency between record contents and recorded identity hashes.
+\end{itemize}
+
+The leakage audit must be executable rather than existing only as a
+documentation claim.
+
+\subsection{Sprint-04 Experimental Scope}
+
+Sprint 04 establishes exact puzzle identity and exact solution-family
+leakage prevention as the primary dataset-integrity mechanisms.
+
+Symmetry-aware canonicalization is explicitly recognized as an additional
+research concern but is not silently assumed to be solved by exact hashing.
+If implemented, it must be introduced as a separately specified and tested
+capability.
+
+The objective of this sprint is dataset integrity and experimental
+provenance. Neural model training begins only after the dataset and leakage
+protocol have been validated and frozen.
